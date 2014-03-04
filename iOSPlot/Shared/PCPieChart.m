@@ -317,18 +317,19 @@
 				CGContextSetRGBFillColor(ctx, 0.4f, 0.4f, 0.4f, 1.0f);
 				left_label_y += optimumSize.height - 4;
                 
+                paragraph = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+                paragraph.lineBreakMode = NSLineBreakByWordWrapping;
+                paragraph.alignment = NSTextAlignmentRight;
+                
                 NSDictionary *attrs = @{NSFontAttributeName: self.titleFont,
-                                        NSForegroundColorAttributeName: [UIColor colorWithRed:0.4 green:0.4 blue:0.4 alpha:1]};
+                                        NSForegroundColorAttributeName: [UIColor colorWithRed:0.4 green:0.4 blue:0.4 alpha:1],
+                                        NSParagraphStyleAttributeName: paragraph};
                 optimumSize = [component.title boundingRectWithSize:CGSizeMake(max_text_width, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:attrs context:NULL].size;
                 
                 optimumSize.width = ceilf(optimumSize.width);
                 optimumSize.height = ceil(optimumSize.height);
                 
 				CGRect titleFrame = CGRectMake(5, left_label_y, max_text_width, optimumSize.height);
-                
-                paragraph = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
-                paragraph.lineBreakMode = NSLineBreakByWordWrapping;
-                paragraph.alignment = NSTextAlignmentRight;
                 
                 [component.title drawInRect:titleFrame withAttributes:attrs];
                 
