@@ -1,34 +1,34 @@
 /**
  * Copyright (c) 2011 Muh Hon Cheng
  * Created by honcheng on 28/4/11.
- * 
- * Permission is hereby granted, free of charge, to any person obtaining 
- * a copy of this software and associated documentation files (the 
- * "Software"), to deal in the Software without restriction, including 
- * without limitation the rights to use, copy, modify, merge, publish, 
- * distribute, sublicense, and/or sell copies of the Software, and to 
- * permit persons to whom the Software is furnished to do so, subject 
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject
  * to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be 
+ *
+ * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT 
- * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR 
- * PURPOSE AND NONINFRINGEMENT. IN NO EVENT 
- * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR 
- * IN CONNECTION WITH THE SOFTWARE OR 
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT
+ * WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ * PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+ * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+ * IN CONNECTION WITH THE SOFTWARE OR
  * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * @author 		Muh Hon Cheng <honcheng@gmail.com>
  * @copyright	2011	Muh Hon Cheng
  * @version
- * 
+ *
  */
 
 #import "PCPieChart.h"
@@ -77,6 +77,17 @@
 		_sameColorLabel = NO;
 	}
     return self;
+}
+
+- (NSNumberFormatter *)percentageFormatter {
+    static dispatch_once_t onceToken;
+    static NSNumberFormatter *_formatter;
+    dispatch_once(&onceToken, ^{
+        _formatter = [[NSNumberFormatter alloc] init];
+        _formatter.numberStyle = NSNumberFormatterPercentStyle;
+        _formatter.maximumFractionDigits = 2;
+    });
+    return _formatter;
 }
 
 #define LABEL_TOP_MARGIN 15
@@ -182,33 +193,43 @@
 				{
 					CGContextSetFillColorWithColor(ctx, [component.colour CGColor]);
 				}
-				else 
+				else
 				{
 					CGContextSetRGBFillColor(ctx, 0.1f, 0.1f, 0.1f, 1.0f);
 				}
 				//CGContextSetRGBStrokeColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
 				//CGContextSetRGBFillColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
-				CGContextSetShadow(ctx, CGSizeMake(0.0f, 0.0f), 3);
 				
 				//float text_x = x + 10;
-				NSString *percentageText = [NSString stringWithFormat:@"%.1f%%", component.value/total*100];
-				CGSize optimumSize = [percentageText sizeWithFont:self.percentageFont constrainedToSize:CGSizeMake(max_text_width,100)];
+				NSString *percentageText = [[self percentageFormatter] stringFromNumber:@(component.value/total)];
+                
+                CGSize optimumSize = [percentageText boundingRectWithSize:CGSizeMake(max_text_width, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: self.percentageFont} context:NULL].size;
+                
+                optimumSize.width = ceilf(optimumSize.width);
+                optimumSize.height = ceil(optimumSize.height);
+                
 				CGRect percFrame = CGRectMake(5, left_label_y,  max_text_width, optimumSize.height);
-        
-        if (self.hasOutline) {
-          CGContextSaveGState(ctx);
-          
-          CGContextSetLineWidth(ctx, 1.0f);
-          CGContextSetLineJoin(ctx, kCGLineJoinRound);
-          CGContextSetTextDrawingMode (ctx, kCGTextFillStroke);
-          CGContextSetRGBStrokeColor(ctx, 0.2f, 0.2f, 0.2f, 0.8f);
-          
-          [percentageText drawInRect:percFrame withFont:self.percentageFont lineBreakMode:UILineBreakModeWordWrap alignment:UITextAlignmentRight];
-          
-          CGContextRestoreGState(ctx);
-        } else {
-          [percentageText drawInRect:percFrame withFont:self.percentageFont lineBreakMode:UILineBreakModeWordWrap alignment:UITextAlignmentRight];
-        }
+                
+                NSMutableParagraphStyle *paragraph = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+                paragraph.lineBreakMode = NSLineBreakByWordWrapping;
+                paragraph.alignment = NSTextAlignmentRight;
+
+                if (self.hasOutline) {
+                    CGContextSaveGState(ctx);
+                    
+                    CGContextSetLineWidth(ctx, 1.0f);
+                    CGContextSetLineJoin(ctx, kCGLineJoinRound);
+                    CGContextSetTextDrawingMode (ctx, kCGTextFillStroke);
+                    CGContextSetRGBStrokeColor(ctx, 0.2f, 0.2f, 0.2f, 0.8f);
+                    
+                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
+                                                                          NSParagraphStyleAttributeName: paragraph}];
+                    
+                    CGContextRestoreGState(ctx);
+                } else {
+                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
+                                                                          NSParagraphStyleAttributeName: paragraph}];
+                }
 				
 				if (self.showArrow)
 				{
@@ -220,7 +241,7 @@
 					//CGContextSetShadow(ctx, CGSizeMake(0.0f, 0.0f), 5);
 					
 					
-					int x1 = inner_radius/4*3*cos((nextStartDeg+component.value/total*360/2-90)*M_PI/180.0)+origin_x; 
+					int x1 = inner_radius/4*3*cos((nextStartDeg+component.value/total*360/2-90)*M_PI/180.0)+origin_x;
 					int y1 = inner_radius/4*3*sin((nextStartDeg+component.value/total*360/2-90)*M_PI/180.0)+origin_y;
 					CGContextSetLineWidth(ctx, 1);
 					if (left_label_y + optimumSize.height/2 < y)//(left_label_y==LABEL_TOP_MARGIN)
@@ -290,7 +311,7 @@
 								CGContextAddLineToPoint(ctx, x1+ARROW_HEAD_WIDTH/2, y1);
 								CGContextClosePath(ctx);
 								CGContextFillPath(ctx);
-							} 
+							}
 							else
 							{
 								// arrow point up
@@ -314,12 +335,24 @@
 				// display title on the left
 				CGContextSetRGBFillColor(ctx, 0.4f, 0.4f, 0.4f, 1.0f);
 				left_label_y += optimumSize.height - 4;
-				optimumSize = [component.title sizeWithFont:self.titleFont constrainedToSize:CGSizeMake(max_text_width,100)];
+                
+                optimumSize = [component.title boundingRectWithSize:CGSizeMake(max_text_width, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: self.titleFont} context:NULL].size;
+                
+                optimumSize.width = ceilf(optimumSize.width);
+                optimumSize.height = ceil(optimumSize.height);
+                
 				CGRect titleFrame = CGRectMake(5, left_label_y, max_text_width, optimumSize.height);
-				[component.title drawInRect:titleFrame withFont:self.titleFont lineBreakMode:UILineBreakModeWordWrap alignment:UITextAlignmentRight];
+                
+                paragraph = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+                paragraph.lineBreakMode = NSLineBreakByWordWrapping;
+                paragraph.alignment = NSTextAlignmentRight;
+                
+                [component.title drawInRect:titleFrame withAttributes:@{NSFontAttributeName: self.titleFont,
+                                                                        NSParagraphStyleAttributeName: paragraph}];
+                
 				left_label_y += optimumSize.height + 10;
 			}
-			else 
+			else
 			{
 				// right
 				
@@ -330,33 +363,43 @@
 					//CGContextSetRGBStrokeColor(ctx, 1.0f, 1.0f, 1.0f, 0.5);
 					//CGContextSetTextDrawingMode(ctx, kCGTextFillStroke);
 				}
-				else 
+				else
 				{
 					CGContextSetRGBFillColor(ctx, 0.1f, 0.1f, 0.1f, 1.0f);
 				}
 				//CGContextSetRGBStrokeColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
 				//CGContextSetRGBFillColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
-				CGContextSetShadow(ctx, CGSizeMake(0.0f, 0.0f), 2);
 				
 				float text_x = x + self.diameter + 10;
-				NSString *percentageText = [NSString stringWithFormat:@"%.1f%%", component.value/total*100];
-				CGSize optimumSize = [percentageText sizeWithFont:self.percentageFont constrainedToSize:CGSizeMake(max_text_width,100)];
+				NSString *percentageText = [[self percentageFormatter] stringFromNumber:@(component.value/total)];
+                
+                CGSize optimumSize = [percentageText boundingRectWithSize:CGSizeMake(max_text_width, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: self.percentageFont} context:NULL].size;
+                
+                optimumSize.width = ceilf(optimumSize.width);
+                optimumSize.height = ceil(optimumSize.height);
+                
 				CGRect percFrame = CGRectMake(text_x, right_label_y, optimumSize.width, optimumSize.height);
-        
-        if (self.hasOutline) {
-          CGContextSaveGState(ctx);
-          
-          CGContextSetLineWidth(ctx, 1.0f);
-          CGContextSetLineJoin(ctx, kCGLineJoinRound);
-          CGContextSetTextDrawingMode (ctx, kCGTextFillStroke);
-          CGContextSetRGBStrokeColor(ctx, 0.2f, 0.2f, 0.2f, 0.8f);
-          
-          [percentageText drawInRect:percFrame withFont:self.percentageFont];
-          
-          CGContextRestoreGState(ctx);
-        } else {
-          [percentageText drawInRect:percFrame withFont:self.percentageFont];
-        }
+                
+                NSMutableParagraphStyle *paragraph = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+                paragraph.lineBreakMode = NSLineBreakByWordWrapping;
+                paragraph.alignment = NSTextAlignmentRight;
+                
+                if (self.hasOutline) {
+                    CGContextSaveGState(ctx);
+                    
+                    CGContextSetLineWidth(ctx, 1.0f);
+                    CGContextSetLineJoin(ctx, kCGLineJoinRound);
+                    CGContextSetTextDrawingMode (ctx, kCGTextFillStroke);
+                    CGContextSetRGBStrokeColor(ctx, 0.2f, 0.2f, 0.2f, 0.8f);
+                    
+                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
+                                                                          NSParagraphStyleAttributeName: paragraph}];
+                    
+                    CGContextRestoreGState(ctx);
+                } else {
+                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
+                                                                          NSParagraphStyleAttributeName: paragraph}];
+                }
 				
 				if (self.showArrow)
 				{
@@ -368,7 +411,7 @@
 					//CGContextSetShadow(ctx, CGSizeMake(0.0f, 0.0f), 5);
 					
 					CGContextSetLineWidth(ctx, 1);
-					int x1 = inner_radius/4*3*cos((nextStartDeg+component.value/total*360/2-90)*M_PI/180.0)+origin_x; 
+					int x1 = inner_radius/4*3*cos((nextStartDeg+component.value/total*360/2-90)*M_PI/180.0)+origin_x;
 					int y1 = inner_radius/4*3*sin((nextStartDeg+component.value/total*360/2-90)*M_PI/180.0)+origin_y;
 					
 					
@@ -416,7 +459,7 @@
 							CGContextAddLineToPoint(ctx, x1, right_label_y + optimumSize.height/2);
 							//CGContextAddLineToPoint(ctx, x1+5, y1);
 							CGContextAddLineToPoint(ctx, x1, y1);
-							CGContextStrokePath(ctx); 
+							CGContextStrokePath(ctx);
 							
 							//CGContextSetRGBFillColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
 							CGContextMoveToPoint(ctx, x1+ARROW_HEAD_WIDTH/2, y1);
@@ -424,7 +467,7 @@
 							CGContextAddLineToPoint(ctx, x1-ARROW_HEAD_WIDTH/2, y1);
 							CGContextClosePath(ctx);
 							CGContextFillPath(ctx);
-						} 
+						}
 						else //if (nextStartDeg<180 && endDeg>180)
 						{
 							// arrow point up
@@ -448,9 +491,16 @@
 				// display title on the left
 				CGContextSetRGBFillColor(ctx, 0.4f, 0.4f, 0.4f, 1.0f);
 				right_label_y += optimumSize.height - 4;
-				optimumSize = [component.title sizeWithFont:self.titleFont constrainedToSize:CGSizeMake(max_text_width,100)];
+                
+                optimumSize = [component.title boundingRectWithSize:CGSizeMake(max_text_width,100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: self.titleFont} context:NULL].size;
+                
+                optimumSize.width = ceilf(optimumSize.width);
+                optimumSize.height = ceil(optimumSize.height);
+                
 				CGRect titleFrame = CGRectMake(text_x, right_label_y, optimumSize.width, optimumSize.height);
-				[component.title drawInRect:titleFrame withFont:self.titleFont];
+                
+                [component.title drawInRect:titleFrame withAttributes:@{NSFontAttributeName: self.titleFont}];
+                
 				right_label_y += optimumSize.height + 10;
 			}
 			nextStartDeg = endDeg;
