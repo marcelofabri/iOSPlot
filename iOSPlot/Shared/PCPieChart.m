@@ -189,14 +189,8 @@
 				// left
 				
 				// display percentage label
-				if (self.sameColorLabel)
-				{
-					CGContextSetFillColorWithColor(ctx, [component.colour CGColor]);
-				}
-				else
-				{
-					CGContextSetRGBFillColor(ctx, 0.1f, 0.1f, 0.1f, 1.0f);
-				}
+                UIColor *color = self.sameColorLabel ? component.colour : [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:1];
+				
 				//CGContextSetRGBStrokeColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
 				//CGContextSetRGBFillColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
 				
@@ -213,23 +207,10 @@
                 NSMutableParagraphStyle *paragraph = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
                 paragraph.lineBreakMode = NSLineBreakByWordWrapping;
                 paragraph.alignment = NSTextAlignmentRight;
-
-                if (self.hasOutline) {
-                    CGContextSaveGState(ctx);
-                    
-                    CGContextSetLineWidth(ctx, 1.0f);
-                    CGContextSetLineJoin(ctx, kCGLineJoinRound);
-                    CGContextSetTextDrawingMode (ctx, kCGTextFillStroke);
-                    CGContextSetRGBStrokeColor(ctx, 0.2f, 0.2f, 0.2f, 0.8f);
-                    
-                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
-                                                                          NSParagraphStyleAttributeName: paragraph}];
-                    
-                    CGContextRestoreGState(ctx);
-                } else {
-                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
-                                                                          NSParagraphStyleAttributeName: paragraph}];
-                }
+                
+                [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
+                                                                      NSParagraphStyleAttributeName: paragraph,
+                                                                      NSForegroundColorAttributeName: color}];
 				
 				if (self.showArrow)
 				{
@@ -336,7 +317,9 @@
 				CGContextSetRGBFillColor(ctx, 0.4f, 0.4f, 0.4f, 1.0f);
 				left_label_y += optimumSize.height - 4;
                 
-                optimumSize = [component.title boundingRectWithSize:CGSizeMake(max_text_width, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: self.titleFont} context:NULL].size;
+                NSDictionary *attrs = @{NSFontAttributeName: self.titleFont,
+                                        NSForegroundColorAttributeName: [UIColor colorWithRed:0.4 green:0.4 blue:0.4 alpha:1]};
+                optimumSize = [component.title boundingRectWithSize:CGSizeMake(max_text_width, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:attrs context:NULL].size;
                 
                 optimumSize.width = ceilf(optimumSize.width);
                 optimumSize.height = ceil(optimumSize.height);
@@ -347,8 +330,7 @@
                 paragraph.lineBreakMode = NSLineBreakByWordWrapping;
                 paragraph.alignment = NSTextAlignmentRight;
                 
-                [component.title drawInRect:titleFrame withAttributes:@{NSFontAttributeName: self.titleFont,
-                                                                        NSParagraphStyleAttributeName: paragraph}];
+                [component.title drawInRect:titleFrame withAttributes:attrs];
                 
 				left_label_y += optimumSize.height + 10;
 			}
@@ -357,16 +339,8 @@
 				// right
 				
 				// display percentage label
-				if (self.sameColorLabel)
-				{
-					CGContextSetFillColorWithColor(ctx, [component.colour CGColor]);
-					//CGContextSetRGBStrokeColor(ctx, 1.0f, 1.0f, 1.0f, 0.5);
-					//CGContextSetTextDrawingMode(ctx, kCGTextFillStroke);
-				}
-				else
-				{
-					CGContextSetRGBFillColor(ctx, 0.1f, 0.1f, 0.1f, 1.0f);
-				}
+                UIColor *color = self.sameColorLabel ? component.colour : [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:1];
+			
 				//CGContextSetRGBStrokeColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
 				//CGContextSetRGBFillColor(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
 				
@@ -384,22 +358,9 @@
                 paragraph.lineBreakMode = NSLineBreakByWordWrapping;
                 paragraph.alignment = NSTextAlignmentRight;
                 
-                if (self.hasOutline) {
-                    CGContextSaveGState(ctx);
-                    
-                    CGContextSetLineWidth(ctx, 1.0f);
-                    CGContextSetLineJoin(ctx, kCGLineJoinRound);
-                    CGContextSetTextDrawingMode (ctx, kCGTextFillStroke);
-                    CGContextSetRGBStrokeColor(ctx, 0.2f, 0.2f, 0.2f, 0.8f);
-                    
-                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
-                                                                          NSParagraphStyleAttributeName: paragraph}];
-                    
-                    CGContextRestoreGState(ctx);
-                } else {
-                    [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
-                                                                          NSParagraphStyleAttributeName: paragraph}];
-                }
+                [percentageText drawInRect:percFrame withAttributes:@{NSFontAttributeName: self.percentageFont,
+                                                                      NSParagraphStyleAttributeName: paragraph,
+                                                                      NSForegroundColorAttributeName: color}];
 				
 				if (self.showArrow)
 				{
@@ -489,7 +450,7 @@
 				}
 				
 				// display title on the left
-				CGContextSetRGBFillColor(ctx, 0.4f, 0.4f, 0.4f, 1.0f);
+                color = [UIColor colorWithRed:0.4 green:0.4 blue:0.4 alpha:1];
 				right_label_y += optimumSize.height - 4;
                 
                 optimumSize = [component.title boundingRectWithSize:CGSizeMake(max_text_width,100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: self.titleFont} context:NULL].size;
@@ -499,7 +460,8 @@
                 
 				CGRect titleFrame = CGRectMake(text_x, right_label_y, optimumSize.width, optimumSize.height);
                 
-                [component.title drawInRect:titleFrame withAttributes:@{NSFontAttributeName: self.titleFont}];
+                [component.title drawInRect:titleFrame withAttributes:@{NSFontAttributeName: self.titleFont,
+                                                                        NSForegroundColorAttributeName: color}];
                 
 				right_label_y += optimumSize.height + 10;
 			}

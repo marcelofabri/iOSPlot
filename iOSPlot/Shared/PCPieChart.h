@@ -54,5 +54,4 @@
 @property (nonatomic, strong) NSMutableArray *components;
 @property (nonatomic, strong) UIFont *titleFont, *percentageFont;
 @property (nonatomic, assign) BOOL showArrow, sameColorLabel;
-@property (nonatomic, assign, getter = hasOutline) BOOL outline;
 @end
